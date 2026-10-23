@@ -34,7 +34,7 @@ best_val_loss = float('inf')
 patience_counter = 0
 train_loss_history = []
 val_loss_history = []
--
+
 for epoch in range(MAX_EPOCHS):
 
     model.train()  
@@ -56,7 +56,7 @@ for epoch in range(MAX_EPOCHS):
 
     model.eval()   
     running_val_loss = 0.0
-    
+    -
     with torch.no_grad():
         for val_x, val_y in val_loader:
             val_x, val_y = val_x.to(device), val_y.to(device)

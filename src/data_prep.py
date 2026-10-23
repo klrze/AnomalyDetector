@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-def load_channel_data(channel_id, data_dir="data/raw"):
+def load_channel_data(channel_id, data_dir="data"):
 
     train_path = os.path.join(data_dir, "train", f"{channel_id}.npy")
     test_path = os.path.join(data_dir, "test", f"{channel_id}.npy")
