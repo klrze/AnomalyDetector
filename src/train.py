@@ -26,7 +26,7 @@ train_loader, val_loader = create_dataloaders(
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=128).to(device)
+model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=64).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -56,7 +56,7 @@ for epoch in range(MAX_EPOCHS):
 
     model.eval()   
     running_val_loss = 0.0
-    -
+    
     with torch.no_grad():
         for val_x, val_y in val_loader:
             val_x, val_y = val_x.to(device), val_y.to(device)
@@ -95,7 +95,7 @@ try:
     conn = psycopg2.connect(
         dbname="nasa_telemetry", 
         user="postgres", 
-        password="your_password", 
+        password="Klarizzem22", 
         host="localhost"
     )
     cur = conn.cursor()

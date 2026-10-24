@@ -13,7 +13,7 @@ class TelemetryMLP(nn.Module):
             nn.Flatten(), 
             
             nn.Linear(self.flattened_size, hidden_dim),
-            2,
+            nn.ReLU(),
             nn.Dropout(dropout_rate), 
 
             nn.Linear(hidden_dim, hidden_dim // 2),
