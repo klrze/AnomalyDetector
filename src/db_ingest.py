@@ -7,7 +7,7 @@ import psycopg2
 from psycopg2.extras import execute_values
 
 
-def ingest_data(channel_id="P-1", data_dir="data"):
+def ingest_data(channel_id="T-1", data_dir="data"):
   conn = psycopg2.connect(
       dbname="nasa_telemetry",
       user="postgres",
