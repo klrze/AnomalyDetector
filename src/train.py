@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import psycopg2
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from model import TelemetryMLP
 from data_prep import load_channel_data, normalize_data, create_dataloaders
@@ -10,7 +11,7 @@ from data_prep import load_channel_data, normalize_data, create_dataloaders
 WINDOW_SIZE = 32
 NUM_FEATURES = 25
 BATCH_SIZE = 64
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0001
 MAX_EPOCHS = 50
 PATIENCE = 5  
 
@@ -26,7 +27,7 @@ train_loader, val_loader = create_dataloaders(
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=64).to(device)
+model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=32).to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -110,11 +111,15 @@ try:
     record_data = (
         WINDOW_SIZE, BATCH_SIZE, LEARNING_RATE, (epoch + 1), 
         train_loss_history[-1], best_val_loss, None, 
-        "128 hidden neurons, pure MSE physics training"
+        "Same settings, retest"
     )
     
     cur.execute(insert_query, record_data)
     conn.commit()
+
+    query = "SELECT id, final_train_loss, val_loss, notes FROM experiment_log ORDER BY id;"
+    df = pd.read_sql_query(query, conn)
+    df.to_csv("experiment_log.csv", index=False)
     
     cur.close()
     conn.close()
