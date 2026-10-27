@@ -34,7 +34,7 @@ def evaluate_model():
     X_test, y_test = [], []
     for i in range(len(test_norm) - WINDOW_SIZE):
         X_test.append(test_norm[i : i + WINDOW_SIZE])
-        y_test.append(test_norm[i + WINDOW_SIZE])  
+        y_test.append([test_norm[i + WINDOW_SIZE, 0]]) 
 
     X_test = torch.tensor(np.array(X_test), dtype=torch.float32).to(device)
     y_test = torch.tensor(np.array(y_test), dtype=torch.float32).to(device)
@@ -142,7 +142,6 @@ def evaluate_model():
     cur.close()
     conn.close()
 
-    # 11. Generate Visualization Plot for LaTeX Report
     plt.figure(figsize=(12, 6))
     plt.plot(test_timestamps, mse_errors, label='Model Residual MSE', color='blue', alpha=0.7, linewidth=1)
     plt.axhline(y=threshold, color='red', linestyle='--', label=f'Threshold ({STD_MULTIPLIER}*Std)', linewidth=1.5)
