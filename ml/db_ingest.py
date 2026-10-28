@@ -79,4 +79,4 @@ def ingest_data(channel_id="T-1", data_dir="data"):
   print("Database ingestion complete and committed.")
 
 if __name__ == "__main__":
-  ingest_data()
+  ingest_data(channel_id="B-1")

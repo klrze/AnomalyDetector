@@ -15,8 +15,13 @@ LEARNING_RATE = 0.0001
 MAX_EPOCHS = 50
 PATIENCE = 5  
 
-train_data, test_data = load_channel_data(channel_id="T-1", data_dir="data")
+train_data, test_data = load_channel_data(channel_id="B-1", data_dir="data")
 train_norm, test_norm, mean, std_safe = normalize_data(train_data, test_data)
+
+train_norm, test_norm, mean, std_safe = normalize_data(train_data, test_data)
+
+test_norm = np.clip(test_norm, -5.0, 5.0)
+train_norm = np.clip(train_norm, -5.0, 5.0)
 
 train_loader, val_loader = create_dataloaders(
     train_norm, 
@@ -103,15 +108,15 @@ try:
     
     insert_query = """
         INSERT INTO experiment_log (
-            window_size, batch_size, learning_rate, epochs, 
+            channel, window_size, batch_size, learning_rate, epochs, 
             final_train_loss, val_loss, f1_score, notes
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
     """
 
     record_data = (
-        WINDOW_SIZE, BATCH_SIZE, LEARNING_RATE, (epoch + 1), 
+        "B-1", WINDOW_SIZE, BATCH_SIZE, LEARNING_RATE, (epoch + 1), 
         train_loss_history[-1], best_val_loss, None, 
-        "Same settings, retest"
+        "64 -> 32 hidden neurons"
     )
     
     cur.execute(insert_query, record_data)

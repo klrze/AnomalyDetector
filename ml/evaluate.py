@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from model import TelemetryMLP
 from data_prep import load_channel_data, normalize_data
 
-CHANNEL_ID = "T-1"
+CHANNEL_ID = "A-1"
 WINDOW_SIZE = 32
 NUM_FEATURES = 25
 STD_MULTIPLIER = 3.0  
@@ -18,10 +18,13 @@ def evaluate_model():
     print(f"Starting evaluation pipeline for channel: {CHANNEL_ID}...")
 
     train_data, test_data = load_channel_data(channel_id=CHANNEL_ID, data_dir=DATA_DIR)
-    _, test_norm, mean, std_safe = normalize_data(train_data, test_data)
+    train_norm, test_norm, mean, std_safe = normalize_data(train_data, test_data)
+
+    train_norm = np.clip(train_norm, -5.0, 5.0)
+    test_norm = np.clip(test_norm, -5.0, 5.0)   
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=32).to(device)
+    model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=64).to(device)
     
     model_path = "saved_models/best_model.pth"
     if not os.path.exists(model_path):
@@ -85,7 +88,6 @@ def evaluate_model():
             is_correct BOOLEAN
         );
     """)
-    cur.execute("TRUNCATE TABLE detected_anomalies RESTART IDENTITY;")
 
     gt_binary = np.zeros(len(test_timestamps), dtype=int)
     for start_t, end_t, _ in nasa_windows:
