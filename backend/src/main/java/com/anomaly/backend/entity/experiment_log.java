@@ -1,26 +1,36 @@
 package com.anomaly.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "experiment_log")
-@Data
 public class experiment_log {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "timestamp")
-    private LocalDateTime timestamp;
+    @Column(name = "channel")
+    private String channel;
+
+    @Column(name = "run_timestamp")
+    private LocalDateTime runTimestamp;
 
     @Column(name = "window_size")
     private Integer windowSize;
 
-    @Column(name = "hidden_dim")
-    private Integer hiddenDim;
+    @Column(name = "batch_size")
+    private Integer batchSize;
 
     @Column(name = "learning_rate")
     private Double learningRate;
@@ -28,8 +38,8 @@ public class experiment_log {
     @Column(name = "epochs")
     private Integer epochs;
 
-    @Column(name = "train_loss")
-    private Double trainLoss;
+    @Column(name = "final_train_loss")
+    private Double finalTrainLoss;
 
     @Column(name = "val_loss")
     private Double valLoss;

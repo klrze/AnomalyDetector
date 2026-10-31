@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from model import TelemetryMLP
 from data_prep import load_channel_data, normalize_data
 
-CHANNEL_ID = "A-1"
+CHANNEL_ID = "B-1"
 WINDOW_SIZE = 32
 NUM_FEATURES = 25
 STD_MULTIPLIER = 3.0  
@@ -134,11 +134,6 @@ def evaluate_model():
         """, anomaly_rows_to_insert)
         print(f"Logged {len(anomaly_rows_to_insert)} flagged anomaly points into PostgreSQL.")
 
-    cur.execute("""
-        UPDATE experiment_log 
-        SET f1_score = %s, notes = %s 
-        WHERE id = (SELECT MAX(id) FROM experiment_log);
-    """, (float(f1_score), f"Evaluated channel {CHANNEL_ID} with F1: {f1_score:.4f}"))
     
     conn.commit()
     cur.close()
