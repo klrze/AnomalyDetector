@@ -24,7 +24,7 @@ def evaluate_model():
     test_norm = np.clip(test_norm, -5.0, 5.0)   
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=64).to(device)
+    model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=32).to(device)
     
     model_path = "saved_models/best_model.pth"
     if not os.path.exists(model_path):

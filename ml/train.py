@@ -9,13 +9,12 @@ from model import TelemetryMLP
 from data_prep import load_channel_data, normalize_data, create_dataloaders
 
 WINDOW_SIZE = 32
-NUM_FEATURES = 25
 BATCH_SIZE = 64
 LEARNING_RATE = 0.0001
 MAX_EPOCHS = 50
 PATIENCE = 5  
 
-train_data, test_data = load_channel_data(channel_id="B-1", data_dir="data")
+train_data, test_data = load_channel_data(channel_id="C-1", data_dir="data")
 train_norm, test_norm, mean, std_safe = normalize_data(train_data, test_data)
 
 train_norm, test_norm, mean, std_safe = normalize_data(train_data, test_data)
@@ -30,9 +29,13 @@ train_loader, val_loader = create_dataloaders(
     batch_size=BATCH_SIZE
 )
 
+sample_x, _ = next(iter(train_loader))
+input_dim = sample_x.shape[1] * sample_x.shape[2]
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=32).to(device)
+model = TelemetryMLP(input_dim=input_dim, hidden_dim=128).to(device)
+
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -114,9 +117,9 @@ try:
     """
 
     record_data = (
-        "B-1", WINDOW_SIZE, BATCH_SIZE, LEARNING_RATE, (epoch + 1), 
+        "C-1", WINDOW_SIZE, BATCH_SIZE, LEARNING_RATE, (epoch + 1), 
         train_loss_history[-1], best_val_loss, None, 
-        "64 -> 32 hidden neurons"
+        "Retest: 32 hidden neurons"
     )
     
     cur.execute(insert_query, record_data)
