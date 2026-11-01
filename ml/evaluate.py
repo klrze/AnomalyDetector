@@ -6,12 +6,11 @@ import pandas as pd
 import psycopg2
 import matplotlib.pyplot as plt
 from model import TelemetryMLP
-from data_prep import load_channel_data, normalize_data
+from data_prep import load_channel_data, normalize_data, create_dataloaders
 
-CHANNEL_ID = "B-1"
+CHANNEL_ID = "C-1"
 WINDOW_SIZE = 32
-NUM_FEATURES = 25
-STD_MULTIPLIER = 3.0  
+STD_MULTIPLIER = 1.5  # Adjusted for better sensitivity
 DATA_DIR = "data"
 
 def evaluate_model():
@@ -23,8 +22,13 @@ def evaluate_model():
     train_norm = np.clip(train_norm, -5.0, 5.0)
     test_norm = np.clip(test_norm, -5.0, 5.0)   
 
+    # Re-create dataloader briefly just to extract matching input_dim dynamically
+    temp_train_loader, _ = create_dataloaders(train_norm, test_norm, window_size=WINDOW_SIZE, batch_size=64)
+    sample_x, _ = next(iter(temp_train_loader))
+    input_dim = sample_x.shape[1] * sample_x.shape[2]
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = TelemetryMLP(window_size=WINDOW_SIZE, num_features=NUM_FEATURES, hidden_dim=32).to(device)
+    model = TelemetryMLP(input_dim=input_dim, hidden_dim=128).to(device)
     
     model_path = "saved_models/best_model.pth"
     if not os.path.exists(model_path):
@@ -32,7 +36,7 @@ def evaluate_model():
     
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
-    print("Successfully loaded 'best_model.pth'. Model locked in evaluation mode.")
+    print("Successfully loaded 'best_model.pth' with matching input dimensions.")
 
     X_test, y_test = [], []
     for i in range(len(test_norm) - WINDOW_SIZE):
@@ -60,34 +64,12 @@ def evaluate_model():
     print(f"Threshold calculated: {threshold:.5f} (Mean: {mu:.5f}, Std: {sigma:.5f})")
 
     conn = psycopg2.connect(
-        dbname="nasa_telemetry",
-        user="postgres",
-        password="Klarizzem22",
-        host="localhost",
-        port="5432"
+        dbname="nasa_telemetry", user="postgres", password="Klarizzem22", host="localhost", port="5432"
     )
     cur = conn.cursor()
 
-    query = """
-        SELECT start_time, end_time, description 
-        FROM anomaly_labels 
-        WHERE channel_id = %s;
-    """
-    cur.execute(query, (CHANNEL_ID,))
+    cur.execute("SELECT start_time, end_time, description FROM anomaly_labels WHERE channel_id = %s;", (CHANNEL_ID,))
     nasa_windows = cur.fetchall()
-
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS detected_anomalies (
-            id SERIAL PRIMARY KEY,
-            channel_id VARCHAR(50),
-            timestamp TIMESTAMP,
-            actual_value FLOAT,
-            predicted_value FLOAT,
-            residual_error FLOAT,
-            threshold FLOAT,
-            is_correct BOOLEAN
-        );
-    """)
 
     gt_binary = np.zeros(len(test_timestamps), dtype=int)
     for start_t, end_t, _ in nasa_windows:
@@ -111,52 +93,8 @@ def evaluate_model():
     print(f"F1-Score  : {f1_score:.4f}")
     print("="*50 + "\n")
 
-    anomaly_rows_to_insert = []
-    for idx, (ts, err, is_flagged) in enumerate(zip(test_timestamps, mse_errors, model_flags)):
-        if is_flagged:
-
-            is_correct = False
-            for start_t, end_t, _ in nasa_windows:
-                if start_t <= ts <= end_t:
-                    is_correct = True
-                    break
-            
-            actual_val = float(test_norm[WINDOW_SIZE + idx, 0])
-            pred_val = float(predictions[idx, 0].item())
-            anomaly_rows_to_insert.append((CHANNEL_ID, ts, actual_val, pred_val, float(err), float(threshold), is_correct))
-
-    if anomaly_rows_to_insert:
-        from psycopg2.extras import execute_values
-        execute_values(cur, """
-            INSERT INTO detected_anomalies 
-            (channel_id, timestamp, actual_value, predicted_value, residual_error, threshold, is_correct)
-            VALUES %s
-        """, anomaly_rows_to_insert)
-        print(f"Logged {len(anomaly_rows_to_insert)} flagged anomaly points into PostgreSQL.")
-
-    
-    conn.commit()
     cur.close()
     conn.close()
-
-    plt.figure(figsize=(12, 6))
-    plt.plot(test_timestamps, mse_errors, label='Model Residual MSE', color='blue', alpha=0.7, linewidth=1)
-    plt.axhline(y=threshold, color='red', linestyle='--', label=f'Threshold ({STD_MULTIPLIER}*Std)', linewidth=1.5)
-
-    for start_t, end_t, desc in nasa_windows:
-        plt.axvspan(start_t, end_t, color='red', alpha=0.2, label='NASA Ground Truth Anomaly')
-
-    plt.title(f'Anomaly Detection Evaluation - Channel {CHANNEL_ID}')
-    plt.xlabel('Timeline')
-    plt.ylabel('Mean Squared Error')
-
-    handles, labels = plt.gca().get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(), loc='upper right')
-    
-    plt.tight_layout()
-    plt.savefig('anomaly_detection.pdf')
-    print("Evaluation plot successfully saved to 'anomaly_detection.pdf'.")
 
 if __name__ == "__main__":
     evaluate_model()

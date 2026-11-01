@@ -29,4 +29,7 @@ public class evaluation_log {
 
     @Column(name = "amount_flagged")
     private Integer amountFlagged;
+
+    @Column(name = "f1_score")
+    private Double f1Score;
 }

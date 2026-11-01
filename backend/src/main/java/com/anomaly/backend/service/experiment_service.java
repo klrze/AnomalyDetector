@@ -16,4 +16,8 @@ public class experiment_service {
     public List<experiment_log> getExperimentsByChannel(String channel) {
         return experimentRepository.findByChannel(channel);
     }
+
+    public experiment_log getBestExperimentByChannel(String channel) {
+    return experimentRepository.findTopByChannelOrderByValLossAsc(channel).orElse(null);
+}
 }

@@ -21,3 +21,13 @@ export const fetchExperimentsByChannel = async (channel) => {
     return [];
   }
 };
+
+export const fetchBestExperimentByChannel = async (channel) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/experiments/channel/${channel}/best`);
+        return response.data;
+    } catch (error) {
+        console.error("API Error:", error);
+        return null;
+    }
+};
