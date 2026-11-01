@@ -22,7 +22,7 @@ A full-stack machine learning and data engineering pipeline designed to ingest m
 - **More Advanced Neural Network Model:** Given that a Multi-Layer Perceptron was as basic as Neural Networks get, this model was temporally blind with no contextual awareness, which caused issues as some channels heavily depended on context and a sliding-window was not sufficient enough to capture that.
 - **More Meaningful Interface:** The current GUI played a purpose of mainly showcasing backend to frontend integration using Spring Boot, ReactJS, and APIs.
 
-# (Video Demo)[https://drive.google.com/file/d/17KQtQFrJzHzLbHhu1LbJY5lxobmSKyBs/view?usp=sharing]
+# [Video Demo](https://drive.google.com/file/d/17KQtQFrJzHzLbHhu1LbJY5lxobmSKyBs/view?usp=sharing)
 
 # Date
 October 2026
